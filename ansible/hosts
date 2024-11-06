@@ -1,0 +1,5 @@
+[control]
+localhost ansible_connection=local
+
+[ubuntu]
+10.11.0.20 ansible_connection=ssh ansible_user=marius
