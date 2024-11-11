@@ -1,0 +1,16 @@
+---
+- name: Start Python web server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure Python is installed
+      apt:
+        name: python3
+        state: present
+
+    - name: Start Python web server
+      command: python3 -m http.server 
+      args:
+           chdir: /var/www/html
+      async: 3600
+      poll: 0
