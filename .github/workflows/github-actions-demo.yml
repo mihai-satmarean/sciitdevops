@@ -16,7 +16,7 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
-      Explore-GitHub-Actions_Melania:
+  Explore-GitHub-Actions_Melania:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event, 🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
