@@ -1,5 +1,5 @@
 name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions ${{ aws.credentials }}
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀 ${{ github.sba }}
 on: [push]
 jobs:
   Explore-GitHub-Actions:
