@@ -1,7 +1,8 @@
 name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions CLOUD_VENDOR: ${{ github.sha }}🚀
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+env:
+      CLOUD_VENDOR: ${{ secrets.CLOUD_VENDOR }}
 on: [push]
-jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
