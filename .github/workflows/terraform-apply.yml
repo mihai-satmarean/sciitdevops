@@ -1,9 +1,6 @@
 name: Terraform apply
 run-name: ${{ github.actor }} is deploying on AWS 🚀
-on:
-  push:
-    branches: 
-      - feature/aws-s3-module
+on: [push]
 jobs:
   Deploy-AWS-Ec2:
     runs-on: ubuntu-latest
@@ -11,8 +8,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_MARIUS }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_MARIUS }}
+          aws-access-key-id: ${{ secrets.MARIANA_AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.MARIANA_AWS_SECRET }}
           aws-region: eu-central-1
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -20,4 +17,6 @@ jobs:
         run: |
           cd terraform/terraform-modules/tf-ec2-module/
           terraform init
+          terraform plan
+          terraform apply
           terraform destroy -auto-approve
