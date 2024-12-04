@@ -12,6 +12,8 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_MELANIA }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_MELANIA }}
           aws-region: eu-west-1
+      - name: Checkout Repository
+          uses: actions/checkout@v4
       - run: ls -lah   
       - name: Deploy Infrastructure
         run: |
