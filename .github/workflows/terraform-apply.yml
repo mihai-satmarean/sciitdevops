@@ -8,8 +8,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.MARIANA_AWS_KEY }}
-          aws-secret-access-key: ${{ secrets.MARIANA_AWS_SECRET }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_MARIANA }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_MARIANA }}
           aws-region: eu-central-1
       - name: Checkout Repository
         uses: actions/checkout@v4
