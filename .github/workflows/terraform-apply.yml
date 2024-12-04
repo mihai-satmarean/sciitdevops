@@ -1,4 +1,5 @@
 name: Terraform apply
+
 run-name: ${{ github.actor }} is deploying on AWS 🚀
 on: [push]
 jobs:
