@@ -1,9 +1,6 @@
 name: Terraform apply
 run-name: ${{ github.actor }} is deploying on AWS 🚀
-on:
-  push:
-    branches: 
-      feature/aws-s3-module
+on: [push]
 jobs:
   Deploy-AWS-Ec2:
     runs-on: ubuntu-latest
