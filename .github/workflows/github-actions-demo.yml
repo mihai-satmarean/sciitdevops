@@ -10,7 +10,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_SEBASTIAN }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_SEBASTIAN }}
-          aws-region: eu-west-1
+          aws-region: Global
       - name: Deploy Infrastructure
         run: |
           aws s3 ls
