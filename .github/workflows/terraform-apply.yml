@@ -17,6 +17,4 @@ jobs:
         run: |
           cd terraform/terraform-modules/tf-ec2-module/
           terraform init
-          terraform plan
-          terraform apply
           terraform destroy -auto-approve
