@@ -1,0 +1,6 @@
+---
+- name: Restart NGINX
+  systemd:
+    name: nginx
+    state: restarted
+  become: true
