@@ -14,7 +14,8 @@ jobs:
           aws-region: eu-west-1
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - run: ls -lah   
+      - run: ls -lah
+      - run: cd terraform
       - name: Deploy Infrastructure
         run: |
           terraform init
