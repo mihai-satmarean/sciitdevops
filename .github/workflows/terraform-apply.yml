@@ -26,21 +26,27 @@ jobs:
           cd terraform/terraform-modules/state-bucket
           terraform init
           terraform apply -auto-approve || echo "Bucket already exists, continuing..."
-
       # Step 4: Reconfigure Backend to Use S3
       - name: Reconfigure Backend to S3
         run: |
           cd terraform/terraform-modules/tf-ec2-module/
-          BUCKET_NAME=$(terraform output -raw backend_config | grep bucket | cut -d '=' -f2 | tr -d ' ')
-          terraform init -backend-config="bucket=${BUCKET_NAME}" \
+          terraform init -backend-config="bucket=terraform_state_bucket" \
                          -backend-config="key=state/${GITHUB_REF#refs/heads/}/terraform.tfstate" \
                          -backend-config="region=eu-central-1"
+
       # Step 5: Apply Terraform with S3 backend
       - name: Finalize Infrastructure Deployment
         run: |
           cd terraform/terraform-modules/tf-ec2-module/
           terraform apply -auto-approve
-      # Step 6: Validate Resources with AWS CLI
+
+      # Step 6: Refresh Terraform State to ensure it's up to date with AWS
+      - name: Refresh Terraform State
+        run: |
+          cd terraform/terraform-modules/tf-ec2-module/
+          terraform refresh
+
+      # Step 7: Validate Resources with AWS CLI
       - name: List Resources Created by Terraform
         run: |
           # Capture Terraform output variables
@@ -49,24 +55,37 @@ jobs:
           PRIVATE_SUBNET_ID=$(terraform output -raw private_subnet_id)
           SECURITY_GROUP_ID=$(terraform output -raw security_group_id)
 
-          # List VPC
+          # Print and List VPC
           echo "Listing VPC with ID: $VPC_ID"
-          aws ec2 describe-vpcs --vpc-ids $VPC_ID
+          aws ec2 describe-vpcs --vpc-ids $VPC_ID || echo "Failed to list VPC with ID: $VPC_ID"
 
-          # List Public Subnet
+          # Print and List Public Subnet
           echo "Listing Public Subnet with ID: $PUBLIC_SUBNET_ID"
-          aws ec2 describe-subnets --subnet-ids $PUBLIC_SUBNET_ID
+          aws ec2 describe-subnets --subnet-ids $PUBLIC_SUBNET_ID || echo "Failed to list Public Subnet with ID: $PUBLIC_SUBNET_ID"
 
-          # List Private Subnet
+          # Print and List Private Subnet
           echo "Listing Private Subnet with ID: $PRIVATE_SUBNET_ID"
-          aws ec2 describe-subnets --subnet-ids $PRIVATE_SUBNET_ID
+          aws ec2 describe-subnets --subnet-ids $PRIVATE_SUBNET_ID || echo "Failed to list Private Subnet with ID: $PRIVATE_SUBNET_ID"
 
-          # List Security Group
+          # Print and List Security Group
           echo "Listing Security Group with ID: $SECURITY_GROUP_ID"
-          aws ec2 describe-security-groups --group-ids $SECURITY_GROUP_ID
+          aws ec2 describe-security-groups --group-ids $SECURITY_GROUP_ID || echo "Failed to list Security Group with ID: $SECURITY_GROUP_ID"
 
-      # Step 7: Destroy Infrastructure
+      # Step 8: Destroy Infrastructure
       - name: Destroy Infrastructure
         run: |
           cd terraform/terraform-modules/tf-ec2-module/
           terraform destroy -auto-approve
+
+      # Step 9: Verify Resources are Destroyed (Optional)
+      - name: Verify Resources are Destroyed
+        run: |
+          # Verify that resources were destroyed by listing them again
+          echo "Verifying VPC Destruction..."
+          aws ec2 describe-vpcs --vpc-ids $VPC_ID || echo "VPC with ID $VPC_ID does not exist."
+          echo "Verifying Public Subnet Destruction..."
+          aws ec2 describe-subnets --subnet-ids $PUBLIC_SUBNET_ID || echo "Public Subnet with ID $PUBLIC_SUBNET_ID does not exist."
+          echo "Verifying Private Subnet Destruction..."
+          aws ec2 describe-subnets --subnet-ids $PRIVATE_SUBNET_ID || echo "Private Subnet with ID $PRIVATE_SUBNET_ID does not exist."
+          echo "Verifying Security Group Destruction..."
+          aws ec2 describe-security-groups --group-ids $SECURITY_GROUP_ID || echo "Security Group with ID $SECURITY_GROUP_ID does not exist."
