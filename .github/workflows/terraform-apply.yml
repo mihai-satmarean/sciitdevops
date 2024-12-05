@@ -49,6 +49,7 @@ jobs:
       # Step 7: Validate Resources with AWS CLI
       - name: List Resources Created by Terraform
         run: |
+          cd terraform/terraform-modules/tf-ec2-module/
           # Capture Terraform output variables
           VPC_ID=$(terraform output -raw vpc_id)
           PUBLIC_SUBNET_ID=$(terraform output -raw public_subnet_id)
