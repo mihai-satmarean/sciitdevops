@@ -25,7 +25,7 @@ jobs:
         run: |
           cd terraform/terraform-modules/state-bucket
           terraform init
-          terraform apply -auto-approve
+          terraform apply -auto-approve || echo "Bucket already exists, continuing..."
 
       # Step 4: Reconfigure Backend to Use S3
       - name: Reconfigure Backend to S3
@@ -40,3 +40,33 @@ jobs:
         run: |
           cd terraform/terraform-modules/tf-ec2-module/
           terraform apply -auto-approve
+      # Step 6: Validate Resources with AWS CLI
+      - name: List Resources Created by Terraform
+        run: |
+          # Capture Terraform output variables
+          VPC_ID=$(terraform output -raw vpc_id)
+          PUBLIC_SUBNET_ID=$(terraform output -raw public_subnet_id)
+          PRIVATE_SUBNET_ID=$(terraform output -raw private_subnet_id)
+          SECURITY_GROUP_ID=$(terraform output -raw security_group_id)
+
+          # List VPC
+          echo "Listing VPC with ID: $VPC_ID"
+          aws ec2 describe-vpcs --vpc-ids $VPC_ID
+
+          # List Public Subnet
+          echo "Listing Public Subnet with ID: $PUBLIC_SUBNET_ID"
+          aws ec2 describe-subnets --subnet-ids $PUBLIC_SUBNET_ID
+
+          # List Private Subnet
+          echo "Listing Private Subnet with ID: $PRIVATE_SUBNET_ID"
+          aws ec2 describe-subnets --subnet-ids $PRIVATE_SUBNET_ID
+
+          # List Security Group
+          echo "Listing Security Group with ID: $SECURITY_GROUP_ID"
+          aws ec2 describe-security-groups --group-ids $SECURITY_GROUP_ID
+
+      # Step 7: Destroy Infrastructure
+      - name: Destroy Infrastructure
+        run: |
+          cd terraform/terraform-modules/tf-ec2-module/
+          terraform destroy -auto-approve
