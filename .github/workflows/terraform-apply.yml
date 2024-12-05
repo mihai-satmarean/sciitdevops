@@ -1,23 +1,42 @@
-name: Terraform apply
+name: Terraform Apply with Remote State
 run-name: ${{ github.actor }} is deploying on AWS 🚀
 on:
   push:
     branches: 
-      - feature/aws-s3-module
+      - mihai-satmarean-patch-1
 jobs:
   Deploy-AWS-Ec2:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_MARIUS }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_MARIUS }}
           aws-region: eu-central-1
+
+      # Step 2: Checkout the repository code
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Deploy Infrastructure
+
+      # Step 3: Ensure Terraform state S3 bucket exists
+      - name: Create Terraform State Bucket
+        run: |
+          cd terraform/terraform-modules/state-bucket
+          terraform init
+          terraform apply -auto-approve
+
+      # Step 4: Reconfigure Backend to Use S3
+      - name: Reconfigure Backend to S3
         run: |
           cd terraform/terraform-modules/tf-ec2-module/
-          terraform init
-          terraform destroy -auto-approve
+          BUCKET_NAME=$(terraform output -raw backend_config | grep bucket | cut -d '=' -f2 | tr -d ' ')
+          terraform init -backend-config="bucket=${BUCKET_NAME}" \
+                         -backend-config="key=state/${GITHUB_REF#refs/heads/}/terraform.tfstate" \
+                         -backend-config="region=eu-central-1"
+      # Step 5: Apply Terraform with S3 backend
+      - name: Finalize Infrastructure Deployment
+        run: |
+          cd terraform/terraform-modules/tf-ec2-module/
+          terraform apply -auto-approve
