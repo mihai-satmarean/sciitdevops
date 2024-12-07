@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is deploying on AWS 🚀
 on:
   push:
     branches: 
-      - feature/aws-s3-module
+      - 55-create-vpc-and-implement-ec2-into-local-branch
 jobs:
   Deploy-AWS-Ec2:
     runs-on: ubuntu-latest
