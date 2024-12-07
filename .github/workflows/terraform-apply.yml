@@ -5,7 +5,7 @@ on:
     branches: 
       - 55-create-vpc-and-implement-ec2-into-local-branch
 jobs:
-  Deploy-AWS-Ec2:
+  Deploy-AWS-EC2:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
