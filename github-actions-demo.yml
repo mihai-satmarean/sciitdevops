@@ -15,7 +15,7 @@ jobs:
         run: |
           aws s3 ls
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🎉 The job was automatically triggered by a ${{ secrets.AWS_ACCESS_KEY_ID_MARIANA }}; ${{ secrets.AWS_SECRET_ACCESS_KEY_MARIANA }} event."
+      - run: echo "🎉 The job was automatically triggered by a ${{ secrets.AWS_ACCESS_KEY_ID_SEBASTIAN }}; ${{ secrets.AWS_SECRET_ACCESS_KEY_SEBASTIAN }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
