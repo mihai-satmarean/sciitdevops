@@ -8,17 +8,49 @@ jobs:
   Deploy-AWS-Ec2:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Configure AWS credentials
+      #Step 0: Read user mapping
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Read User Mapping
+        id: user-mapping
+        run: |
+          user_mapping=$(cat .github/workflows/user-mapping.json)
+          github_actor=${{ github.actor }}
+
+          echo "User mapping: $user_mapping"
+          echo "GitHub actor: $github_actor"
+
+          user_data=$(echo "$user_mapping" | jq -r '[".$github_actor"]')
+
+          if [[ -z "$user_data" ]]; then
+              echo "No user mapping found for $github_actor"
+              exit 1
+          fi
+
+          access_key_id=$(echo $user_data | jq -r '.AWS_SECRET_ACCESS_KEY_ID')
+          secret_access_key=$(echo $user_data | jq -r '.AWS_SECRET_ACCESS_KEY')
+
+          echo "Access key ID: $access_key_id"
+          echo "Secret access key: $secret_access_key"
+
+          echo "::set-output name=access_key_id::${access_key_id}"
+          echo "::set-output name=secret_access_key::${secret_access_key}"
+
+      - name: Print User Mapping
+        run: echo "${{ steps.user-mapping.outputs.user-mapping }}"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_MARIUS }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_MARIUS }}
-          aws-region: eu-central-1
+          aws-access-key-id: ${{ steps.read_mapping.outputs.access_key_id }}
+          aws-secret-access-key: ${{ steps.read_mapping.outputs.secret_access_key }}
+          aws-region: us-central-1
 
-      # Step 2: Checkout the repository code
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      #- name: Checkout Repository
+      #  uses: actions/checkout@v4
 
       # Step 3: Ensure Terraform state S3 bucket exists
       - name: Create Terraform State Bucket
