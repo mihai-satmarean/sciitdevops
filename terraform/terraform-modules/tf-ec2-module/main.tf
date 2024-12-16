@@ -50,6 +50,18 @@ resource "aws_security_group" "mariusb-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
     description      = "SSH"
     from_port        = 22
     to_port          = 22
@@ -65,15 +77,20 @@ resource "aws_security_group" "mariusb-sg" {
   }
   tags = merge(local.common_tags, { Name = "mariusb-sg" })
 }
+resource "aws_key_pair" "deployer" {
+  key_name   = "marius-key"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCZ+WUUo9np4Lt6SfVRqSyVyNQnPF8D4AU5c0axEvmEmMPE7kTq1Y4IRqHA4BPc+g2YB+6fBQksF6ZRSngyVBGSicqhtHxp1rRrzLr4smvRqaOGcoh8thyRAdm46CpGWol0xun0sXoBL4E2LT9nWABmobvd1bJIaI3qXV8L2sR6YE+5x+AjFLvL3Ydvuc8bZpV89t9EE7PEaFYSA78tsf++Ir2qp0JPolVDByuneoaPvFLIL3g1SOPdWSNW65Rjs+PgF7S+xS8WaOw5T5+w595FTw+9HsENj86C+vREliOWxwkFl84e4uSXg7zyGyRz25u3eIboLCti+kmbF3yuij8FtbNIxOfJ1X/3J8sc/pzJvmX5OUhhbLd1YAhIhcnPWn1hxpHEA6pZp+xXy+G4HRG049cRE51Snmy42pmsZ8NkdZQKtvKRrYiCuxL5BuoRkI/ou21CajoSh/GgKiqmqrMZgsFzMawDwYZk5QOkNpfbjjwT2FRHHh5khTsoh6JsGos= marius@ubuntu-devops"
+}
 resource "aws_instance" "web" {
   ami                    = "ami-0084a47cc718c111a" # Ubuntu AMI
   instance_type          = "t2.micro"
   availability_zone      = var.public_subnet_az
   subnet_id = aws_subnet.public-subnet.id
+  key_name = "marius-key"
   vpc_security_group_ids = [aws_security_group.mariusb-sg.id]
  
   tags = merge(local.common_tags, { Name = "WebServer" })
  
-  user_data = file("apache.sh")
+  user_data = file("python_web_server.sh")
 }
 
