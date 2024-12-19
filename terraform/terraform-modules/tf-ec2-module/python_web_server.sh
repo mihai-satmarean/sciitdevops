@@ -27,7 +27,7 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-BING_API_KEY = '84ec906603864f4d8bef898212f44486'  # Replace with your Bing API key
+BING_API_KEY = 'BING API KEY'  # Replace with your Bing API key
 
 def get_image_url(city):
     headers = {"Ocp-Apim-Subscription-Key": BING_API_KEY}
@@ -43,7 +43,7 @@ def get_weather():
     if not city:
         return jsonify({'error': 'City name is required'}), 400
 
-    api_key = '400a3bdbd044f1ce7f5dca894d285b78'  # Replace with your OpenWeatherMap API key
+    api_key = 'OpenWeatherMap API KEY'  # Replace with your OpenWeatherMap API key
     url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric'
 
     response = requests.get(url)
