@@ -4,6 +4,18 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "vpc_name" {
+  description = "The name of the VPC"
+  type        = string
+  default     = "mihai_vpc"
+}
+
+variable "security_group_name" {
+  description = "The name of the security group"
+  type        = string
+  default     = "mihai_sg"
+}
+
 variable "vpc_cidr" {
   description = "The CIDR block for the VPC"
   type        = string

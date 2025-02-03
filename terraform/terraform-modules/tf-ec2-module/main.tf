@@ -2,13 +2,14 @@ provider "aws" {
   region = var.region
 }
 
-resource "aws_vpc" "mariusb-vpc" {
+resource "aws_vpc" "vpc" {
+  name       = var.vpc_name
   cidr_block = var.vpc_cidr
-  tags       = merge(local.common_tags, { Name = "mariusb-vpc" })
+  tags       = merge(local.common_tags, { Name = var.vpc_name })
 }
 
 resource "aws_subnet" "public-subnet" {
-  vpc_id                  = aws_vpc.mariusb-vpc.id
+  vpc_id                  = var.vpc_name
   cidr_block              = var.public_subnet_cidr
   map_public_ip_on_launch = true
   availability_zone       = var.public_subnet_az
@@ -16,19 +17,19 @@ resource "aws_subnet" "public-subnet" {
 }
 
 resource "aws_subnet" "private-subnet" {
-  vpc_id            = aws_vpc.mariusb-vpc.id
+  vpc_id            = var.vpc_name
   cidr_block        = var.private_subnet_cidr
   availability_zone = var.private_subnet_az
   tags              = merge(local.common_tags, { Name = "private-subnet" })
 }
 
 resource "aws_internet_gateway" "net-igw" {
-  vpc_id = aws_vpc.mariusb-vpc.id
+  vpc_id = var.vpc_name
   tags   = merge(local.common_tags, { Name = "net-igw" })
 }
 
 resource "aws_route_table" "public-rt" {
-  vpc_id = aws_vpc.mariusb-vpc.id
+  vpc_id = var.vpc_name
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.net-igw.id
@@ -41,8 +42,21 @@ resource "aws_route_table_association" "public-rt" {
   route_table_id = aws_route_table.public-rt.id
 }
 
-resource "aws_security_group" "mariusb-sg" {
-  vpc_id = aws_vpc.mariusb-vpc.id
+resource "null_resource" "get_public_ip" {
+  provisioner "local-exec" {
+    command = "curl -k https://api.ipify.org/"
+    interpreter = ["bash", "-c"]
+  }
+
+  # This will create an output variable to capture the public IP
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+}
+
+resource "aws_security_group" "security_group" {
+  name   = var.security_group_name
+  vpc_id = var.vpc_name
   ingress {
     from_port   = 80
     to_port     = 80
@@ -54,7 +68,7 @@ resource "aws_security_group" "mariusb-sg" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = ["86.120.230.117/32"]
+    cidr_blocks      = [null_resource.get_public_ip.*.id]
     ipv6_cidr_blocks = ["::/0"]
   }
   egress {
@@ -63,14 +77,14 @@ resource "aws_security_group" "mariusb-sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = merge(local.common_tags, { Name = "mariusb-sg" })
+  tags = merge(local.common_tags, { Name = var.security_group_name })
 }
 resource "aws_instance" "web" {
   ami                    = "ami-0084a47cc718c111a" # Ubuntu AMI
   instance_type          = "t2.micro"
   availability_zone      = var.public_subnet_az
   subnet_id = aws_subnet.public-subnet.id
-  vpc_security_group_ids = [aws_security_group.mariusb-sg.id]
+  vpc_security_group_ids = [aws_security_group.security_group.id]
  
   tags = merge(local.common_tags, { Name = "WebServer" })
  
