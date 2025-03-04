@@ -15,11 +15,3 @@ variable "username" {
   description = "The username for the local account that will be created on the new VM."
   default     = "azureadmin"
 }
-
-variable "vm_names" {
-  default = {
-    "k3s" = "Standard_B1s"
-    "API" = "Standard_B1s"
-  }
-}
-
