@@ -36,5 +36,5 @@ Provide a more detailed description of your project here. You can include:
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/your-username/project-name.git
+   git clone https://github.com/sebbastianG/Devops.git
 
