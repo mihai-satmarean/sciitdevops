@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is deploying on AWS 🚀
 on:
   push:
     branches: 
-      - feature/aws-s3-module
+      - mihai-satmarean-patch-1
 jobs:
   Deploy-AWS-Ec2:
     runs-on: ubuntu-latest
