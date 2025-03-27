@@ -1,0 +1,85 @@
+name: "AWS Infra"
+
+on:
+  workflow_dispatch: 
+
+
+
+jobs:
+  provision-ec2:
+    runs-on: ubuntu-latest
+    defaults:
+        run:
+          shell: bash
+          working-directory: ./terraform/aws
+
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v3
+
+      # Configure AWS credentials
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          aws-region: 'eu-west-1'
+
+      # Terraform Setup
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      # Save instance IPs and create inventory file for Ansible
+      - name: Save instance IPs and create inventory
+        run: |
+          INSTANCE_IPS=$(terraform output -json instance_ips)
+          echo "$INSTANCE_IPS" | jq -r '.[]' > ansible/instance-ips.txt
+          echo "[servers]" > ansible/inventory.ini
+          while IFS= read -r ip; do
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=./scripts/devaws.pem" >> ansible/inventory.ini
+          done < ansible/instance-ips.txt
+
+      # Wait for SSH to be available
+      - name: Wait for SSH to be available
+        run: |
+          for ip in $(cat ansible/instance-ips.txt); do
+            echo "⏳ Waiting for SSH on $ip..."
+            SECONDS=0
+            while ! nc -z $ip 22; do
+              sleep 10
+              if [ $SECONDS -gt 300 ]; then
+                echo "❌ Timeout: SSH is not available on $ip after 5 minutes."
+                exit 1
+              fi
+            done
+            echo "✅ SSH is available on $ip!"
+          done
+
+      #  Add SSH Key from GitHub Secrets
+      - name: Add SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > ~/.ssh/devaws.pem
+          chmod 400 ~/.ssh/devaws.pem
+
+      # Test SSH connection
+      - name: Test SSH connection
+        run: |
+          INSTANCE_IP=$(terraform output -json instance_ips | jq -r 'if type == "string" then . else .[0] end')
+          echo "Trying to SSH into $INSTANCE_IP"
+          ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/devaws.pem ubuntu@$INSTANCE_IP
+
+      # Install Ansible
+      - name: Install Ansible
+        run: sudo apt update && sudo apt install -y ansible
+
+      # Run Ansible Playbook
+      - name: Run Ansible Playbook
+        run: ansible-playbook -i ansible/inventory.ini ansible/playbook.yaml -vvv
